@@ -3,6 +3,26 @@
 # Define the list of modules
 MODULES=("SegmenterParallel")  # Replace with actual module names
 
+# Help message function
+show_help() {
+    echo "Usage: $0 <module_name> [additional_arguments...]"
+    echo ""
+    echo "Options:"
+    echo "  --help       Show this help message and exit"
+    echo "  <module_name>  The module to run. Options are: ${MODULES[*]}"
+    echo "  [args...]     Additional arguments passed to the module"
+    echo ""
+    echo "Example:"
+    echo "  $0 SegmenterParallel /path/to/input.ini"
+    exit 0
+}
+
+# Check if the first argument is --help
+if [[ "$1" == "--help" ]]; then
+    show_help
+fi
+
+
 # Check if a module name is provided
 if [ -z "$1" ]; then
     echo "Usage: $0 <module_name> [additional_arguments...]"
