@@ -1,10 +1,14 @@
 
-**/flake.lock
-**/.envrc
-**/.direnv
-**/.clang-format
-**/.clangd
-**/bin/
-**/binDebug/
-**/libDebug/
+flake.lock
+.envrc
+.direnv
+.clang-format
+.clangd
+
+.cache/
+build/
+bin/
+binDebug/
+libDebug/
+lib/
 
