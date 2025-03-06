@@ -1,0 +1,10 @@
+
+**/flake.lock
+**/.envrc
+**/.direnv
+**/.clang-format
+**/.clangd
+**/bin/
+**/binDebug/
+**/libDebug/
+
