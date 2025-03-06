@@ -39,8 +39,8 @@ outputs = { self, nixpkgs, flake-utils, ... }:
                 buildInputs = with pkgs; [
                 ];
                 shellHook = ''
-                    ./compile.sh debug
                 '';
+                    # ./compile.sh debug
                 LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";
                     # cmake --no-warn-unused-cli -DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=TRUE -DCMAKE_BUILD_TYPE=Debug -DCMAKE_C_COMPILER:FILEPATH=`which gcc` -DCMAKE_INSTALL_PREFIX=install -DCMAKE_CXX_COMPILER:FILEPATH=`which g++` -S./ -B./build -G "Unix Makefiles"
             };

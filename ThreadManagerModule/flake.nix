@@ -33,8 +33,8 @@ outputs = { self, nixpkgs, flake-utils, ... }:
                 buildInputs = with pkgs; [
                 ];
                 shellHook = ''
-                    ./compile.sh release
                 '';
+                    # ./compile.sh release
                 LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";
             };
         }
