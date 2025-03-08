@@ -1,12 +1,10 @@
 #include "utils.hpp"
 #include <csignal>
-#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
 #include <unordered_map>
-#include <vector>
 
 //////////////////////////////////////////////////////////////
 // External variables:
@@ -21,6 +19,7 @@ Int imageWidth;
 Int imageHeight;
 bool resizeToImageWidthHeight;
 
+std::string cropDataLoadModeStr;
 std::string saveModeStr;
 Int numThreads;
 Int taskBufferSize;
@@ -30,6 +29,7 @@ bool enableDetailedPrinting;
 Int progressBarWidth;
 
 // Helper:
+LoadMode cropDataLoadMode;
 SaveMode saveMode;
 //////////////////////////////////////////////////////////////
 
@@ -83,6 +83,7 @@ std::string customInfo(Info errorCode)
         { EndOfFile, "Reached end of file" },
         { FinishedAllFiles, "Finished all files" },
         { CVRuntimeError, "OpenCV runtime error" },
+        { EmptyTask, "Task function received empty task" },
     };
     try {
         return errorMap.at(errorCode);
@@ -188,6 +189,34 @@ void readParameterDouble(std::unordered_map<std::string, std::string>& fileConfi
     print("Found Parameter " + name + " of type double with value " + std::to_string(parameter), true, true);
 }
 
+void getLoadMode(const std::string& loadModeStr, LoadMode& parameter, const std::string& parameterName)
+{
+    if (loadModeStr == "oneFile") {
+        parameter = oneFile;
+    } else if (loadModeStr == "oneFilePerImage") {
+        parameter = oneFilePerImage;
+    } else if (loadModeStr == "oneFilePerObject") {
+        parameter = oneFilePerObject;
+    } else {
+        throw std::runtime_error(makeRed("Error: Invalid value for parameter " + parameterName + ": " + loadModeStr));
+    }
+}
+
+void getSaveMode(const std::string& saveModeStr, SaveMode& parameter, const std::string& parameterName)
+{
+    if (saveModeStr == "oneImagePerObject") {
+        parameter = oneImagePerObject;
+    } else if (saveModeStr == "cluster") {
+        parameter = cluster;
+    } else if (saveModeStr == "clusterPerImage") {
+        parameter = clusterPerImage;
+    } else if (saveModeStr == "drawContours") {
+        parameter = drawContours;
+    } else {
+        throw std::runtime_error(makeRed("Error: Invalid value for parameter " + parameterName + ": " + saveModeStr));
+    }
+}
+
 void readParameterBool(std::unordered_map<std::string, std::string>& fileConfig, std::unordered_map<std::string, std::string>& commandLineConfig, bool& parameter, std::string name)
 {
     auto foundKey = commandLineConfig.find(name);
@@ -244,18 +273,11 @@ void readParameters(int argc, char* argv[])
     readParameterInt(fileConfig, commandLineConfig, imageWidth, "imageWidth");
     readParameterInt(fileConfig, commandLineConfig, imageHeight, "imageHeight");
     readParameterBool(fileConfig, commandLineConfig, resizeToImageWidthHeight, "resizeToImageWidthHeight");
-
+    readParameterString(fileConfig, commandLineConfig, cropDataLoadModeStr, "cropDataLoadMode");
     readParameterString(fileConfig, commandLineConfig, saveModeStr, "saveMode");
 
-    if (saveModeStr == "oneFile") {
-        saveMode = oneFile;
-    } else if (saveModeStr == "oneFilePerImage") {
-        saveMode = oneFilePerImage;
-    } else if (saveModeStr == "oneFilePerObject") {
-        saveMode = oneFilePerObject;
-    } else {
-        throw std::runtime_error(makeRed("Error: Invalid value for parameter saveMode: " + saveModeStr));
-    }
+    getSaveMode(saveModeStr, saveMode, "saveMode");
+    getLoadMode(cropDataLoadModeStr, cropDataLoadMode, "cropDataLoadMode");
 
     print("--------------------------------------------------------------------\n", true, true);
 }

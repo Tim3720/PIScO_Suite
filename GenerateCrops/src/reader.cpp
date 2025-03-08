@@ -34,7 +34,7 @@ FileReader::FileReader(const std::string& filePath, std::string startWith)
     _numFiles = _files.size();
 
     // for progress:
-    if (saveMode == oneFile) {
+    if (cropDataLoadMode == oneFile) {
         checkInfo(_openFile(), enableDetailedPrinting, enableDetailedPrinting);
         std::string line;
         while (_getNextLine(line) == Success) {
@@ -93,8 +93,8 @@ void FileReader::_getFiles(std::string path, std::vector<std::string>& files, co
             files.push_back(entry.path().string());
             // c++;
         }
-        // if (c >= 5)
-        //     break;
+        // if (c >= 3)
+            // break;
     }
     print("Found " + std::to_string(files.size()) + " files", true, enableDetailedPrinting);
 }
@@ -169,7 +169,7 @@ Info FileReader::getNextObjectStack(std::vector<Object>& objects, const size_t& 
 Info FileReader::getNextImage(std::vector<Object>& objects)
 {
     Info info;
-    if (saveMode == oneFile) {
+    if (cropDataLoadMode == oneFile) {
         Object object;
         // get next object to find filename of the new image
         info = getNextObject(object);
@@ -196,7 +196,7 @@ Info FileReader::getNextImage(std::vector<Object>& objects)
             }
         }
         return Success;
-    } else if (saveMode == oneFilePerImage) {
+    } else if (cropDataLoadMode == oneFilePerImage) {
         while (true) {
             Object object;
             info = getNextObject(object);
@@ -221,7 +221,7 @@ Info FileReader::getNextImage(std::vector<Object>& objects)
 
 void FileReader::progress()
 {
-    if (saveMode == oneFile) {
+    if (cropDataLoadMode == oneFile) {
         progressBar(_currentLine, _numLines);
     } else {
         progressBar(_fileIdx, _numFiles);
