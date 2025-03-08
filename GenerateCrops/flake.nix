@@ -31,13 +31,12 @@ outputs = { self, nixpkgs, flake-utils, ... }:
                     gcc
                 ];
                 buildInputs = with pkgs; [
-                    libtiff
-                    # (opencv.override ({
-                    #     enableGtk3 = true;
-                    #     enableCuda = false;
-                    #     enableFfmpeg = true;
-                    #     enableUnfree = true;
-                    # }))
+                    (opencv.override ({
+                        enableGtk3 = true;
+                        enableCuda = false;
+                        enableFfmpeg = true;
+                        enableUnfree = true;
+                    }))
                 ];
                 shellHook = ''
                 '';

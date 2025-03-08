@@ -1,5 +1,7 @@
 #pragma once
+#include "utils.hpp"
 #include <fstream>
+#include <info.hpp>
 #include <iostream>
 #include <opencv2/core.hpp>
 #include <vector>
@@ -18,22 +20,27 @@ struct Object {
 
 std::ostream& operator<<(std::ostream& out, const Object& object);
 
-enum Mode {
-    OneFile,
-    OneFilePerImage,
-    OneFilePerObject,
-};
-
 struct FileReader {
 private:
     std::ifstream _file;
-    std::string _header;
+    Object _loadedObject;
+    std::vector<std::string> _files;
+    size_t _fileIdx;
+    size_t _numFiles;
+    size_t _numLines;
+    size_t _currentLine;
+    bool _nextObjectLoaded;
 
-    bool _getNextLine(std::string& line);
+    Info _openFile();
+    Info _getNextLine(std::string& line);
+    void _getFiles(std::string path, std::vector<std::string>& files, const std::string& startWith = "");
 
 public:
-    FileReader(const std::string& fileName, Mode mode);
+    FileReader(const std::string& fileName, std::string startWith = "");
     ~FileReader();
-    bool getNextObject(Object& object);
-    bool getNextObjectStack(std::vector<Object>& objects, const size_t& stackSize);
+    Info getNextObject(Object& object);
+    Info getNextObjectStack(std::vector<Object>& objects, const size_t& stackSize);
+    Info getNextImage(std::vector<Object>& objects);
+    size_t getNumFiles();
+    void progress();
 };

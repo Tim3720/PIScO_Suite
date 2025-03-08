@@ -1,5 +1,4 @@
 #include "utils.hpp"
-#include <background_correction.hpp>
 #include <csignal>
 #include <filesystem>
 #include <fstream>
@@ -15,38 +14,23 @@
 // Paths:
 std::string sourcePath;
 std::string savePath;
+std::string imageSourcePath;
 
-// ThreadManager settings:
-Int stackSize;
-Int numBufferedStacks;
-Int numSegmenterThreads;
-Int numReaderThreads;
-
-// Image manipulation settings:
+// image manipulation settings:
 Int imageWidth;
 Int imageHeight;
 bool resizeToImageWidthHeight;
-bool invertImages;
-std::string backgroundCorrectionModelStr;
-Int numBackgroundImages;
 
-// Segmenter settings:
-double minObjectArea;
-bool saveContours;
-SaveMode saveMode;
-bool saveBackgroundCorrectedImages;
-bool saveCrops;
+std::string saveModeStr;
+Int numThreads;
+Int taskBufferSize;
 
 // Other:
-Int progressBarWidth;
 bool enableDetailedPrinting;
+Int progressBarWidth;
 
 // Helper:
-std::function<void(const std::vector<cv::Mat>&, cv::Mat&, int, int)> backgroundCorrectionModel;
-Int bufferSize;
-std::string saveModeStr;
-std::string objectSaveFilePath;
-std::ofstream objectSaveFile;
+SaveMode saveMode;
 //////////////////////////////////////////////////////////////
 
 void print(std::string str, bool newLine, bool ignoreDetailedPrinting)
@@ -93,11 +77,12 @@ void progressBar(Int fileIdx, Int filesSize)
 std::string customInfo(Info errorCode)
 {
     const std::unordered_map<Info, std::string> errorMap {
-        { EmptyImage, "Empty image" },
-        { UnreadableImageFile, "Unreadable image file" },
-        { CVRuntime, "OpenCV runtime error" },
-        { WriterErrorInvalidSaveMode, "Writer error: invalid save mode" },
-        { ReaderFinished, "Reader finished with files" },
+        { CouldNotOpenFile, "Could not open file" },
+        { EndOfFileNotReached, "End of file not reached" },
+        { EmptyFile, "File is empty" },
+        { EndOfFile, "Reached end of file" },
+        { FinishedAllFiles, "Finished all files" },
+        { CVRuntimeError, "OpenCV runtime error" },
     };
     try {
         return errorMap.at(errorCode);
@@ -251,69 +236,26 @@ void readParameters(int argc, char* argv[])
     print("--------------------------------------------------------------------", true, true);
     readParameterBool(fileConfig, commandLineConfig, enableDetailedPrinting, "enableDetailedPrinting");
     readParameterString(fileConfig, commandLineConfig, sourcePath, "sourcePath");
+    readParameterString(fileConfig, commandLineConfig, imageSourcePath, "imageSourcePath");
     readParameterString(fileConfig, commandLineConfig, savePath, "savePath");
-    readParameterInt(fileConfig, commandLineConfig, stackSize, "stackSize");
-    readParameterInt(fileConfig, commandLineConfig, numBufferedStacks, "numBufferedStacks");
-    readParameterInt(fileConfig, commandLineConfig, numSegmenterThreads, "numSegmenterThreads");
-    readParameterInt(fileConfig, commandLineConfig, numReaderThreads, "numReaderThreads");
+    readParameterInt(fileConfig, commandLineConfig, progressBarWidth, "progressBarWidth");
+    readParameterInt(fileConfig, commandLineConfig, numThreads, "numThreads");
+    readParameterInt(fileConfig, commandLineConfig, taskBufferSize, "taskBufferSize");
     readParameterInt(fileConfig, commandLineConfig, imageWidth, "imageWidth");
     readParameterInt(fileConfig, commandLineConfig, imageHeight, "imageHeight");
     readParameterBool(fileConfig, commandLineConfig, resizeToImageWidthHeight, "resizeToImageWidthHeight");
-    readParameterBool(fileConfig, commandLineConfig, invertImages, "invertImages");
-    readParameterString(fileConfig, commandLineConfig, backgroundCorrectionModelStr, "backgroundCorrectionModel");
-    readParameterInt(fileConfig, commandLineConfig, progressBarWidth, "progressBarWidth");
-    readParameterDouble(fileConfig, commandLineConfig, minObjectArea, "minObjectArea");
-    readParameterBool(fileConfig, commandLineConfig, saveContours, "saveContours");
-    readParameterBool(fileConfig, commandLineConfig, saveBackgroundCorrectedImages, "saveBackgroundCorrectedImages");
-    readParameterBool(fileConfig, commandLineConfig, saveCrops, "saveCrops");
-    readParameterInt(fileConfig, commandLineConfig, numBackgroundImages, "numBackgroundImages");
 
     readParameterString(fileConfig, commandLineConfig, saveModeStr, "saveMode");
 
     if (saveModeStr == "oneFile") {
         saveMode = oneFile;
-        objectSaveFilePath = savePath + "/objects.dat";
     } else if (saveModeStr == "oneFilePerImage") {
-        objectSaveFilePath = savePath + "/objects_img_";
         saveMode = oneFilePerImage;
     } else if (saveModeStr == "oneFilePerObject") {
         saveMode = oneFilePerObject;
-        objectSaveFilePath = savePath + "/object_";
     } else {
         throw std::runtime_error(makeRed("Error: Invalid value for parameter saveMode: " + saveModeStr));
     }
 
-    if (backgroundCorrectionModelStr == "minMaxMethod") {
-        backgroundCorrectionModel = minMaxMethod;
-    } else if (backgroundCorrectionModelStr == "minMethod") {
-        backgroundCorrectionModel = minMethod;
-    } else if (backgroundCorrectionModelStr == "averageMethod") {
-        backgroundCorrectionModel = averageMethod;
-    } else if (backgroundCorrectionModelStr == "medianMethod") {
-        backgroundCorrectionModel = medianMethod;
-    } else {
-        throw std::runtime_error(makeRed("Error: Invalid value for parameter backgroundCorrectionModel: " + backgroundCorrectionModelStr));
-    }
-
-    // create crop directory if needed
-    if (saveCrops && !std::filesystem::is_directory(savePath + "/crops"))
-        std::filesystem::create_directory(savePath + "/crops");
-
-    // check values:
-    // if (numSegmenterThreads < 1)
-    //     error("Invalid value for parameter numThreads: " + std::to_string(numSegmenterThreads) + ". At least two threads are needed.");
-    // if (numSegmenterThreads > numBufferedStacks)
-    //     warning("Number of threads is larger than number of buffered stacks. Only numBufferedStacks can run at the same time.");
-
-    if (backgroundCorrectionModelStr == "minMaxMethod" && numBackgroundImages % 2 != 0) {
-        warning("For the minMaxMethod, the number of background images needs to be even. numBackgroundImages will be set to " + std::to_string(numBackgroundImages - 1));
-        numBackgroundImages--;
-    }
-    if (numBackgroundImages > stackSize || numBackgroundImages <= 0) {
-        warning("Invalid value for parameter numBackgroundImages: " + std::to_string(numBackgroundImages) + ". This value needs to be smaller or equal to the stack size and larger than zero: " + std::to_string(stackSize) + ". numBufferedStacks will be set to stackSize.");
-        numBackgroundImages = stackSize;
-    }
-
-    bufferSize = stackSize * numBufferedStacks;
     print("--------------------------------------------------------------------\n", true, true);
 }

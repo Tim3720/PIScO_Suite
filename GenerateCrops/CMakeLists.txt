@@ -11,18 +11,12 @@ set(BUILDING_DIR "${CMAKE_SOURCE_DIR}/binDebug")
 
 # Add OpenCV support
 
-# find_package(OpenCV REQUIRED)
+find_package(OpenCV REQUIRED)
 
-# if(OpenCV_FOUND) message(STATUS "OpenCV found at ${OpenCV_DIR}") else()
-# message(FATAL_ERROR "OpenCV not found. Please install OpenCV and try again.")
-# endif()
-
-find_package(TIFF REQUIRED)
-if(TIFF_FOUND)
-  message(STATUS "libtiff found at ${TIFF_INCLUDE_DIR}")
+if(OpenCV_FOUND)
+  message(STATUS "OpenCV found at ${OpenCV_DIR}")
 else()
-  message(
-    FATAL_ERROR "libtiff not found. Please install libtiff and try again.")
+  message(FATAL_ERROR "OpenCV not found. Please install OpenCV and try again.")
 endif()
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -36,7 +30,21 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_CXX_FLAGS
       "${CMAKE_CXX_FLAGS} -fsanitize=undefined -fsanitize=address")
 
+  set(THREAD_MANAGER_MODULE_DIR "../ThreadManagerModule/")
+  # Check if ThreadManagerModule is available
+  if(EXISTS ${THREAD_MANAGER_MODULE_DIR}/libDebug/libThreadManagerModule.a
+     OR EXISTS ${THREAD_MANAGER_MODULE_DIR}/libDebug/libThreadManagerModule.so)
+    message(STATUS "Found ThreadManagerModule at ${THREAD_MANAGER_MODULE_DIR}")
+  else()
+    message(
+      FATAL_ERROR
+        "ThreadManagerModule library not found in ${THREAD_MANAGER_MODULE_DIR}. Please check the installation."
+    )
+  endif()
+
   set(BUILDING_DIR "${CMAKE_SOURCE_DIR}/binDebug")
+  include_directories(${THREAD_MANAGER_MODULE_DIR}/include)
+  link_directories(${THREAD_MANAGER_MODULE_DIR}/libDebug)
 
 else()
   message(
@@ -44,6 +52,21 @@ else()
       "Configuring ${PROJECT_NAME} with C++ ${CMAKE_CXX_STANDARD} in release mode..."
   )
   set(CMAKE_CXX_FLAGS "-Wall")
+
+  # Specify the directory where the ThreadManagerModule is installed
+  set(THREAD_MANAGER_MODULE_DIR "../ThreadManagerModule/")
+  # Check if ThreadManagerModule is available
+  if(EXISTS ${THREAD_MANAGER_MODULE_DIR}/lib/libThreadManagerModule.a
+     OR EXISTS ${THREAD_MANAGER_MODULE_DIR}/lib/libThreadManagerModule.so)
+    message(STATUS "Found ThreadManagerModule at ${THREAD_MANAGER_MODULE_DIR}")
+  else()
+    message(
+      FATAL_ERROR
+        "ThreadManagerModule library not found in ${THREAD_MANAGER_MODULE_DIR}. Please check the installation."
+    )
+  endif()
+  include_directories(${THREAD_MANAGER_MODULE_DIR}/include)
+  link_directories(${THREAD_MANAGER_MODULE_DIR}/lib)
 
   set(BUILDING_DIR "${CMAKE_SOURCE_DIR}/bin")
 endif()
@@ -58,7 +81,7 @@ file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/*.hpp) # Collect all .hpp
 add_compile_definitions("DEBUG=$<CONFIG:Debug>")
 add_executable(${PROJECT_NAME} ${SRC_FILES})
 
-target_link_libraries(${PROJECT_NAME} ${TIFF_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ThreadManagerModule)
 
 # target_link_options(${PROJECT_NAME} BEFORE PUBLIC -fsanitize=undefined PUBLIC
 # -fsanitize=address) Set the output directory for the binary to a 'bin' folder

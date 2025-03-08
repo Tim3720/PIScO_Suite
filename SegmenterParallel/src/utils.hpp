@@ -9,13 +9,13 @@
 // Type definitions:
 //////////////////////////////////////////////////////////////
 
-typedef size_t Index;
+typedef size_t Int;
 
 // SegmenterObject contains information about a single object found in an image.
 struct SegmenterObject {
     std::vector<cv::Point> contour; // Vector of points that enclose the object
     cv::Rect boundingRect; // Bounding rect of the object in the (resized) image. If the image was resized, the bounding box for the original image can be computed with the imageSize that will be saved
-    Index fileIdx; // File index of the image the object was found on.
+    Int fileIdx; // File index of the image the object was found on.
     float area;
     uint32_t id;
 
@@ -33,7 +33,7 @@ struct SegmenterObject {
 struct Image {
     cv::Mat workingImage;
     cv::Mat originalImage;
-    Index fileIdx;
+    Int fileIdx;
 
     ~Image()
     {
@@ -58,18 +58,18 @@ extern std::string sourcePath;
 extern std::string savePath;
 
 // ThreadManager settings:
-extern Index stackSize;
-extern Index numBufferedStacks;
-extern Index numSegmenterThreads;
-extern Index numReaderThreads;
+extern Int stackSize;
+extern Int numBufferedStacks;
+extern Int numSegmenterThreads;
+extern Int numReaderThreads;
 
 // Image manipulation settings:
-extern Index imageWidth;
-extern Index imageHeight;
+extern Int imageWidth;
+extern Int imageHeight;
 extern bool resizeToImageWidthHeight;
 extern bool invertImages;
 extern std::string backgroundCorrectionModelStr;
-extern Index numBackgroundImages;
+extern Int numBackgroundImages;
 
 // Segmenter settings:
 extern double minObjectArea;
@@ -79,12 +79,12 @@ extern bool saveCrops;
 extern SaveMode saveMode;
 
 // Other:
-extern Index progressBarWidth;
+extern Int progressBarWidth;
 extern bool enableDetailedPrinting;
 
 // Helper:
 extern std::function<void(const std::vector<cv::Mat>&, cv::Mat&, int, int)> backgroundCorrectionModel;
-extern Index bufferSize;
+extern Int bufferSize;
 extern std::string saveModeStr;
 extern std::string objectSaveFilePath;
 extern std::ofstream objectSaveFile;
@@ -103,4 +103,4 @@ std::string customInfo(Info errorCode);
 
 void readParameters(int argc, char* argv[]);
 void print(std::string str, bool newLine = true, bool ignoreDetailedPrinting = false);
-void progressBar(Index fileIdx, Index filesSize);
+void progressBar(Int fileIdx, Int filesSize);

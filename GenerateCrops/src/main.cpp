@@ -1,22 +1,13 @@
+#include "crop_generator.hpp"
+#include "utils.hpp"
 #include <iostream>
 
-#include "reader.hpp"
-
-int main()
+int main(int argc, char* argv[])
 {
-    std::string filename = "/home/tim/Documents/ArbeitTestData/TestResults/objects_contours.dat";
-
-    FileReader reader(filename, OneFile);
-
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<Object> objects;
-    for (size_t i = 0; i < 9184; i++)
-        reader.getNextObjectStack(objects, 10);
-
-    auto end = std::chrono::high_resolution_clock::now();
-    double duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    std::cout << "Duration: " << duration << "ms" << std::endl;
-
-    // for (Object& o : objects)
-    //     std::cout << o << std::endl;
+#if (DEBUG)
+    std::cout << "\033[31mProgram is compiled in DEBUG mode\033[0m" << std::endl;
+#endif
+    errorFunction = customInfo;
+    readParameters(argc, argv);
+    generate_crops();
 }

@@ -43,7 +43,7 @@ std::function<std::string(Info)> errorFunction = info;
 void checkInfo(const Info& infoCode, bool printWarnings, bool printInfo)
 {
     // warning
-    if (infoCode > 0 && printWarnings)
+    if (infoCode > 0 && infoCode < 128 && printWarnings)
         std::cout << makeYellow("Warning: " + errorFunction(infoCode)) << std::endl;
     // info
     else if (infoCode > 127 && printInfo)

@@ -28,7 +28,7 @@ if [[ "$1" == "--help" ]]; then
 fi
 
 # Find all module directories (assuming each module has a flake.nix file)
-MODULES=("ThreadManagerModule" "BackgroundCorrectionModule" "SegmenterParallel")
+MODULES=("ThreadManagerModule" "BackgroundCorrectionModule" "SegmenterParallel" "GenerateCrops")
 
 COMPILE_ARG="${1:-release}"
 
@@ -38,12 +38,12 @@ for module in "${MODULES[@]}"; do
         echo -e "\e[34mBuilding module: $module\e[0m"
         cd "$module" || { echo "Failed to enter $module"; exit 1; }
 
-        if [ -f ".envrc" ]; then
-            ./compile.sh "$COMPILE_ARG" && cmake --build build
-        else
+        # if [ -f ".envrc" ]; then
+        #     ./compile.sh "$COMPILE_ARG" && cmake --build build
+        # else
         # Enter Nix shell and compile the module
             nix develop --command bash -c "./compile.sh $COMPILE_ARG && cmake --build build"
-        fi
+        # fi
         cd - >/dev/null || exit
     else
         echo "Skipping $module: Directory or flake.nix not found."

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Define the list of modules
-MODULES=("SegmenterParallel")  # Replace with actual module names
+MODULES=("SegmenterParallel" "GenerateCrops" )  # Replace with actual module names
 
 # Help message function
 show_help() {
