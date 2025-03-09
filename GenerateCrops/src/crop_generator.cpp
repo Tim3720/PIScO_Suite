@@ -15,20 +15,59 @@
 Info operateOnObjects(std::vector<Object>* objectsPtr, const size_t& taskIdx, cv::Mat& sourceImage, const std::string& imageName)
 {
     if (saveMode == oneImagePerObject) {
-        // store object only in blue channel:
-        cv::multiply(sourceImage, cv::Scalar(1, 0, 0), sourceImage);
         Object object;
-        cv::Mat crop;
-        std::vector<std::vector<cv::Point>> contours;
-        contours.resize(1);
         for (size_t i = 0; i < objectsPtr[taskIdx].size(); i++) {
             object = objectsPtr[taskIdx][i];
-            crop = sourceImage(object.boundingBox);
-            contours[0] = object.contour;
-            // draw contour in green channel
-            cv::drawContours(crop, contours, -1, cv::Scalar(0, 255, 0), 1, cv::LINE_8, cv::noArray(), 1, cv::Point(-object.boundingBox.x, -object.boundingBox.y));
-            cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", crop);
+            cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", sourceImage(object.boundingBox));
         }
+
+        // Object object;
+        // cv::Mat result;
+        // cv::Mat channel[3] = {};
+        // for (size_t i = 0; i < objectsPtr[taskIdx].size(); i++) {
+        //     object = objectsPtr[taskIdx][i];
+        //     channel[0] = sourceImage(object.boundingBox);
+        //
+        //     cv::threshold(channel[0], channel[1], object.threshold + 5, 255, cv::THRESH_BINARY);
+        //     cv::threshold(channel[0], channel[2], object.threshold - 5, 255, cv::THRESH_BINARY);
+        //     cv::threshold(channel[0], channel[0], object.threshold, 255, cv::THRESH_BINARY);
+        //
+        //     cv::merge(channel, 3, result);
+        //     cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", result);
+        // }
+
+        // store object only in blue channel:
+        // Object object;
+        // cv::Mat result;
+        // cv::Mat channel[3] = {};
+        // std::vector<std::vector<cv::Point>> contours;
+        // contours.resize(1);
+        // for (size_t i = 0; i < objectsPtr[taskIdx].size(); i++) {
+        //     object = objectsPtr[taskIdx][i];
+        //     channel[0] = sourceImage(object.boundingBox);
+        //     channel[1] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
+        //     channel[2] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
+        //     // contours[0] = object.contour;
+        //
+        //     size_t xOffset = object.boundingBox.x;
+        //     size_t yOffset = object.boundingBox.y;
+        //     uint8_t c1 = 1;
+        //     uint8_t c2 = 0;
+        //     for (const cv::Point& p : object.contour) {
+        //         channel[1].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c1;
+        //         channel[2].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c2;
+        //         if (c1 == 255) {
+        //             c1 = 0;
+        //             c2++;
+        //         }
+        //         c1++;
+        //     }
+        /// draw contour in green channel
+        //     cv::drawContours(channel[1], contours, -1, 255, 1, cv::LINE_8, cv::noArray(), 1, cv::Point(-object.boundingBox.x, -object.boundingBox.y));
+        // cv::merge(channel, 3, result);
+        // cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", result);
+        // result.release();
+        // }
     } else if (saveMode == drawContours) {
         std::vector<std::vector<cv::Point>> contours;
         Object object;
@@ -36,6 +75,7 @@ Info operateOnObjects(std::vector<Object>* objectsPtr, const size_t& taskIdx, cv
             object = objectsPtr[taskIdx][i];
             contours.push_back(object.contour);
         }
+        cv::cvtColor(sourceImage, sourceImage, cv::COLOR_GRAY2BGR);
         cv::drawContours(sourceImage, contours, -1, cv::Scalar(0, 255, 0));
         cv::imwrite(savePath + "/" + imageName + ".png", sourceImage);
     } else if (saveMode == cluster) {
@@ -57,10 +97,15 @@ Info imageTask(const size_t& threadId, std::mutex& mutex, void* taskData, const 
         return EmptyTask;
     }
 
+    std::string imageFileName;
+    std::string imageName;
     try {
-        std::string imageFileName = objectsPtr[taskIdx][0].imageFileName;
-        std::string imageName = imageFileName.substr(0, imageFileName.size() - 4);
-        cv::Mat img = cv::imread(imageSourcePath + "/" + imageFileName, cv::IMREAD_COLOR);
+        imageFileName = objectsPtr[taskIdx][0].imageFileName;
+        imageName = imageFileName.substr(0, imageFileName.size() - 4);
+
+        // cv::Mat img = cv::imread(imageSourcePath + "/" + imageFileName, cv::IMREAD_GRAYSCALE);
+        //
+        cv::Mat img = cv::imread(imageSourcePath + "/" + imageName + "." + sourceImageFileType, cv::IMREAD_GRAYSCALE);
 
         if (resizeToImageWidthHeight)
             cv::resize(img, img, cv::Size(imageWidth, imageHeight));
@@ -71,7 +116,7 @@ Info imageTask(const size_t& threadId, std::mutex& mutex, void* taskData, const 
         img.release();
         objectsPtr[taskIdx].clear();
     } catch (cv::Exception& e) {
-        std::cout << "OpenCV error: " << e.what() << std::endl;
+        std::cout << "OpenCV error: " << e.what() << " in file " << imageSourcePath + "/" + imageName + "." + sourceImageFileType << std::endl;
         return CVRuntimeError;
     } catch (std::exception& e) {
         std::cout << "Error: " << e.what() << std::endl;

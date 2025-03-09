@@ -6,6 +6,8 @@
 #include <opencv2/core.hpp>
 #include <vector>
 
+#define DATA_LEN 9
+
 /*
  *  This code implements a reader class that is designed to read and handle large amount of data. The data is expected to be in the output format of the SegmenterParallel code.
  */
@@ -16,6 +18,7 @@ struct Object {
     std::string imageFileName;
     cv::Rect boundingBox;
     float area;
+    uint32_t threshold;
 };
 
 std::ostream& operator<<(std::ostream& out, const Object& object);

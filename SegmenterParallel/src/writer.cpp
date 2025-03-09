@@ -34,7 +34,7 @@ Info initWriter()
 {
     try {
         objectSaveFile.open(objectSaveFilePath);
-        objectSaveFile << "ID, Image filename, x, y, width, height, contour area";
+        objectSaveFile << "ID, Image filename, x, y, width, height, contour area, threshold";
         if (saveContours)
             objectSaveFile << ", contour";
         objectSaveFile << "\n";
@@ -51,7 +51,7 @@ Info initWriter(std::string fileName)
 {
     try {
         objectSaveFile.open(objectSaveFilePath + fileName);
-        objectSaveFile << "ID, Image filename, x, y, width, height, contour area";
+        objectSaveFile << "ID, Image filename, x, y, width, height, contour area, threshold";
         if (saveContours)
             objectSaveFile << ", contour";
         objectSaveFile << "\n";
@@ -90,7 +90,7 @@ Info writeSegmenterObject(const SegmenterObject& object, const std::vector<std::
         }
 
         // write object data:
-        objectSaveFile << object.id << "," << filename << "," << object.boundingRect.x << "," << object.boundingRect.y << "," << object.boundingRect.width << "," << object.boundingRect.height << "," << object.area;
+        objectSaveFile << object.id << "," << filename << "," << object.boundingRect.x << "," << object.boundingRect.y << "," << object.boundingRect.width << "," << object.boundingRect.height << "," << object.area << "," << uint32_t(object.threshold);
         if (saveContours) {
             objectSaveFile << ",{";
             for (size_t i = 0; i < object.contour.size() - 1; i++) {

@@ -32,8 +32,7 @@ outputs = { self, nixpkgs, flake-utils, ... }:
                 ];
                 buildInputs = with pkgs; [
                     (python312.withPackages(ps: with ps;[
-                        # (opencv4.override {enableGtk2 = true;})
-                        opencv4
+                        (opencv4.override {enableGtk2 = true;})
                         numpy
                         scipy
                         matplotlib

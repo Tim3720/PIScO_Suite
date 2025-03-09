@@ -88,7 +88,3 @@ target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ThreadManagerModule)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                                  ${BUILDING_DIR})
-
-# Check if the executable was created successfully
-message(
-  STATUS "Executable ${PROJECT_NAME} created successfully in ${BUILDING_DIR}.")

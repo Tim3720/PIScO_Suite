@@ -139,8 +139,8 @@ Info _detection(Image* imageBuffer, Int startPos, Int size, const std::vector<cv
             if (saveBackgroundCorrectedImages || saveCrops)
                 imageBuffer[startPos + i].originalImage = imageBuffer[startPos + i].workingImage.clone();
 
-            cv::threshold(imageBuffer[startPos + i].workingImage, imageBuffer[startPos + i].workingImage, 0, 255, cv::THRESH_TRIANGLE);
-            cv::findContours(imageBuffer[startPos + i].workingImage, contours, cv::RETR_TREE, cv::CHAIN_APPROX_SIMPLE);
+            double threshold = cv::threshold(imageBuffer[startPos + i].workingImage, imageBuffer[startPos + i].workingImage, 0, 255, cv::THRESH_TRIANGLE);
+            cv::findContours(imageBuffer[startPos + i].workingImage, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
 
             int id = 0;
             for (Int j = 0; j < Int(contours.size()); j++) {
@@ -154,6 +154,7 @@ Info _detection(Image* imageBuffer, Int startPos, Int size, const std::vector<cv
                 object.boundingRect = cv::boundingRect(contours[j]);
                 object.area = area;
                 object.id = id;
+                object.threshold = (uint8_t)threshold;
                 id++;
                 objectsOnImage.push_back(object);
             }
@@ -238,7 +239,7 @@ void _taskLoop(const std::vector<std::string>& files)
     Int* fileIndices = new Int[numReaderThreads];
     // Index* bufferIndices = new Index[numBufferedStacks * (2 * stackSize + 1)]; // memory layout: { size1, i11, i12, ..., i1N, size2, i21, ... }
     Int* bufferIndices = new Int[numBufferedStacks * 2]; // memory layout: { size1, start1, size2, start2, ... }
-                                                             //
+                                                         //
     // allocate memory for image buffer. Double the size to allow for stack overflows. This is wastefull of memory, but should be fine as only pointers are stored. The images are not allocated before reading.
     Image* imageBuffer = new Image[2 * bufferSize];
 

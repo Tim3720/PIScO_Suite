@@ -18,6 +18,7 @@ struct SegmenterObject {
     Int fileIdx; // File index of the image the object was found on.
     float area;
     uint32_t id;
+    uint8_t threshold;
 
     SegmenterObject()
         : contour()
@@ -25,6 +26,7 @@ struct SegmenterObject {
         , fileIdx(0)
         , area(0)
         , id(0)
+        , threshold(0)
     {
     }
 };

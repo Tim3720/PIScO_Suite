@@ -18,6 +18,7 @@ std::string imageSourcePath;
 Int imageWidth;
 Int imageHeight;
 bool resizeToImageWidthHeight;
+std::string sourceImageFileType;
 
 std::string cropDataLoadModeStr;
 std::string saveModeStr;
@@ -275,6 +276,7 @@ void readParameters(int argc, char* argv[])
     readParameterBool(fileConfig, commandLineConfig, resizeToImageWidthHeight, "resizeToImageWidthHeight");
     readParameterString(fileConfig, commandLineConfig, cropDataLoadModeStr, "cropDataLoadMode");
     readParameterString(fileConfig, commandLineConfig, saveModeStr, "saveMode");
+    readParameterString(fileConfig, commandLineConfig, sourceImageFileType, "sourceImageFileType");
 
     getSaveMode(saveModeStr, saveMode, "saveMode");
     getLoadMode(cropDataLoadModeStr, cropDataLoadMode, "cropDataLoadMode");

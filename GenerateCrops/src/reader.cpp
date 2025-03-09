@@ -94,7 +94,7 @@ void FileReader::_getFiles(std::string path, std::vector<std::string>& files, co
             // c++;
         }
         // if (c >= 3)
-            // break;
+        // break;
     }
     print("Found " + std::to_string(files.size()) + " files", true, enableDetailedPrinting);
 }
@@ -121,17 +121,18 @@ Info FileReader::getNextObject(Object& object)
     if (info == Success) {
         // line layout: id,imgFileName,x,y,width,h,area,[contour] (optional)
         std::vector<std::string> values;
-        values.reserve(8);
+        values.reserve(DATA_LEN);
         split(line, ',', values);
 
         try {
             object.imageFileName = values[1];
             object.boundingBox = cv::Rect(std::stoi(values[2]), std::stoi(values[3]), std::stoi(values[4]), std::stoi(values[5]));
             object.area = std::stof(values[6]);
+            object.threshold = std::stof(values[7]);
 
             // check if contours where saved:
-            if (values.size() > 7) {
-                std::string contoursString = values[7].substr(1, values[7].size() - 2); // remove {}
+            if (values.size() > DATA_LEN - 1) {
+                std::string contoursString = values[DATA_LEN - 1].substr(1, values[DATA_LEN - 1].size() - 2); // remove {}
                 std::vector<std::string> points;
                 split(contoursString, '|', points);
                 size_t delimiterIdx;

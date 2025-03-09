@@ -51,6 +51,7 @@ extern Int taskBufferSize;
 
 extern std::string cropDataLoadModeStr;
 extern std::string saveModeStr;
+extern std::string sourceImageFileType;
 
 // Other:
 extern bool enableDetailedPrinting;
