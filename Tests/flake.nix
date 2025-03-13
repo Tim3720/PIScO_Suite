@@ -19,20 +19,28 @@ outputs = { self, nixpkgs, flake-utils, ... }:
             pkgs.libcxx
             pkgs.eigen
         ];
+
+        libtorch = pkgs.callPackage ./default.nix {};
     in
         with pkgs;
-            {
+        {
+            # packages.${system} = {
+            #     libtorch = libtorch;
+            # };
+            # defaultPackage.${system} = libtorch;
+
             devShells.default = mkShell {
+                default = libtorch;
                 nativeBuildInputs = with pkgs; [
                     bashInteractive
                     eigen
                     libcxx
                     pkg-config
-                    gcc
+                    gcc12
                 ];
                 buildInputs = with pkgs; [
                     (python312.withPackages(ps: with ps;[
-                        (opencv4.override {enableGtk2 = true;})
+                        # (opencv4.override {enableGtk2 = true;})
                         numpy
                         scipy
                         matplotlib
