@@ -30,16 +30,24 @@ outputs = { self, nixpkgs, flake-utils, ... } @inputs:
                     libcxx
                     pkg-config
                     cudatoolkit
+                    cudaPackages.cuda_cudart
                 ];
                 buildInputs = [
+                    (opencv.override {
+                        enableGtk3 = true;
+                        # enableCuda = false;
+                        enableFfmpeg = true;
+                        enableUnfree = true;
+                    })
                     pkgs.python3Packages.torch
                     (pkgs.python3Packages.opencv4.override { enableGtk3 = true; })
                     custom_libtorch
                 ] ;
 
                 shellHook = ''
+                    echo ${custom_libtorch.dev}
+                    echo ${custom_libtorch.out}
                 '';
-                    # echo ${pkgs.libtorch-bin}
                 LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";
             };
         }

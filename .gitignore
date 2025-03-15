@@ -11,3 +11,5 @@ bin/
 binDebug/
 libDebug/
 lib/
+
+ExternalLibs/
