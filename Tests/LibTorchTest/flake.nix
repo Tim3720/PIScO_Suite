@@ -19,6 +19,8 @@ outputs = { self, nixpkgs, flake-utils, ... } @inputs:
         libs = [
             pkgs.libcxx
         ];
+
+        custom_libtorch = pkgs.callPackage ./default.nix {};
     in
         with pkgs;
             {
@@ -27,18 +29,24 @@ outputs = { self, nixpkgs, flake-utils, ... } @inputs:
                     bashInteractive
                     libcxx
                     pkg-config
+                    cudatoolkit
+                    cudaPackages.cuda_cudart
                 ];
-                buildInputs = with pkgs; [
-                    (python312.withPackages(ps: with ps; [
-                        matplotlib
-                        numpy
-                        (opencv4.override { enableGtk3 = true; })
-                    ]))
-                    # pkgs.python3Packages.torch
-                    # (pkgs.python3Packages.)
+                buildInputs = [
+                    (opencv.override {
+                        enableGtk3 = true;
+                        # enableCuda = false;
+                        enableFfmpeg = true;
+                        enableUnfree = true;
+                    })
+                    pkgs.python3Packages.torch
+                    (pkgs.python3Packages.opencv4.override { enableGtk3 = true; })
+                    custom_libtorch
                 ] ;
 
                 shellHook = ''
+                    echo ${custom_libtorch.dev}
+                    echo ${custom_libtorch.out}
                 '';
                 LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";
             };

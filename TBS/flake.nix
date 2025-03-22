@@ -1,20 +1,18 @@
 {
 inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-utils = {
         url = "github:numtide/flake-utils";
-        inputs.system.follows = "systems";
     };
 };
 
-outputs = { self, nixpkgs, flake-utils, ... } @inputs:
+outputs = { self, nixpkgs, flake-utils, ... }:
     flake-utils.lib.eachDefaultSystem
     (system:
     let
         pkgs = import nixpkgs {
             inherit system;
             config.allowUnfree = true;
-            config.cudaSupport = true;
         };
         libs = [
             pkgs.libcxx
@@ -25,19 +23,20 @@ outputs = { self, nixpkgs, flake-utils, ... } @inputs:
             devShells.default = mkShell {
                 nativeBuildInputs = with pkgs; [
                     bashInteractive
+                    cmake
+                    libgcc
                     libcxx
                     pkg-config
+                    gcc
                 ];
                 buildInputs = with pkgs; [
-                    (python312.withPackages(ps: with ps; [
-                        matplotlib
-                        numpy
-                        (opencv4.override { enableGtk3 = true; })
-                    ]))
-                    # pkgs.python3Packages.torch
-                    # (pkgs.python3Packages.)
-                ] ;
-
+                    (opencv.override {
+                        enableGtk3 = true;
+                        enableCuda = false;
+                        enableFfmpeg = true;
+                        enableUnfree = true;
+                    })
+                ];
                 shellHook = ''
                 '';
                 LD_LIBRARY_PATH = "${pkgs.lib.makeLibraryPath libs}";

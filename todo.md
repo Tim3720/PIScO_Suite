@@ -9,3 +9,8 @@
 
 # SinciVinci
 [ ] Implement SinciVinci with the modules 
+
+
+# Ideas: 
+- Cross-Correlation tracking: https://staff.fnwi.uva.nl/r.vandenboomgaard/IPCV20162017/LectureNotes/CV/Motion/CorrelationTracking.html
+- stereoscopic PIV
