@@ -38,36 +38,36 @@ Info operateOnObjects(std::vector<Object>* objectsPtr, const size_t& taskIdx, cv
 
         // store object only in blue channel:
         // Object object;
-        // cv::Mat result;
-        // cv::Mat channel[3] = {};
+        cv::Mat result;
+        cv::Mat channel[3] = {};
         // std::vector<std::vector<cv::Point>> contours;
         // contours.resize(1);
-        // for (size_t i = 0; i < objectsPtr[taskIdx].size(); i++) {
-        //     object = objectsPtr[taskIdx][i];
-        //     channel[0] = sourceImage(object.boundingBox);
-        //     channel[1] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
-        //     channel[2] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
-        //     // contours[0] = object.contour;
-        //
-        //     size_t xOffset = object.boundingBox.x;
-        //     size_t yOffset = object.boundingBox.y;
-        //     uint8_t c1 = 1;
-        //     uint8_t c2 = 0;
-        //     for (const cv::Point& p : object.contour) {
-        //         channel[1].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c1;
-        //         channel[2].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c2;
-        //         if (c1 == 255) {
-        //             c1 = 0;
-        //             c2++;
-        //         }
-        //         c1++;
-        //     }
-        /// draw contour in green channel
-        //     cv::drawContours(channel[1], contours, -1, 255, 1, cv::LINE_8, cv::noArray(), 1, cv::Point(-object.boundingBox.x, -object.boundingBox.y));
-        // cv::merge(channel, 3, result);
-        // cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", result);
-        // result.release();
-        // }
+        for (size_t i = 0; i < objectsPtr[taskIdx].size(); i++) {
+            object = objectsPtr[taskIdx][i];
+            channel[0] = sourceImage(object.boundingBox);
+            channel[1] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
+            channel[2] = cv::Mat::zeros(channel[0].size(), CV_8UC1);
+            // contours[0] = object.contour;
+
+            size_t xOffset = object.boundingBox.x;
+            size_t yOffset = object.boundingBox.y;
+            uint8_t c1 = 1;
+            uint8_t c2 = 0;
+            for (const cv::Point& p : object.contour) {
+                channel[1].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c1;
+                channel[2].at<uint8_t>(p.y - yOffset, p.x - xOffset) = c2;
+                if (c1 == 255) {
+                    c1 = 0;
+                    c2++;
+                }
+                c1++;
+            }
+            // / draw contour in green channel
+            // cv::drawContours(channel[1], contours, -1, 255, 1, cv::LINE_8, cv::noArray(), 1, cv::Point(-object.boundingBox.x, -object.boundingBox.y));
+            cv::merge(channel, 3, result);
+            cv::imwrite(savePath + "/" + imageName + "_" + std::to_string(i) + ".png", result);
+            result.release();
+        }
     } else if (saveMode == drawContours) {
         std::vector<std::vector<cv::Point>> contours;
         Object object;
