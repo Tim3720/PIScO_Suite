@@ -21,8 +21,14 @@ outputs = { self, nixpkgs, flake-utils, ... } @inputs:
         ];
     in
         with pkgs;
-            {
+        {
+            # packages.${system} = {
+            #     libtorch = libtorch;
+            # };
+            # defaultPackage.${system} = libtorch;
+
             devShells.default = mkShell {
+                default = libtorch;
                 nativeBuildInputs = with pkgs; [
                     bashInteractive
                     libcxx
