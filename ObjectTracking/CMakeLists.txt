@@ -73,7 +73,6 @@ else()
 
   set(BUILDING_DIR "${CMAKE_SOURCE_DIR}/bin")
 endif()
-endif()
 
 # Automatically detect all source and header files
 file(GLOB SRC_FILES ${CMAKE_SOURCE_DIR}/src/*.cpp) # Collect all .cpp files in
