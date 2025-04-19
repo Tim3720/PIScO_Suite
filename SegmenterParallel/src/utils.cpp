@@ -29,6 +29,7 @@ bool resizeToImageWidthHeight;
 bool invertImages;
 std::string backgroundCorrectionModelStr;
 Int numBackgroundImages;
+bool inputIsVideo;
 
 // Segmenter settings:
 double minObjectArea;
@@ -267,6 +268,7 @@ void readParameters(int argc, char* argv[])
     readParameterBool(fileConfig, commandLineConfig, saveBackgroundCorrectedImages, "saveBackgroundCorrectedImages");
     readParameterBool(fileConfig, commandLineConfig, saveCrops, "saveCrops");
     readParameterInt(fileConfig, commandLineConfig, numBackgroundImages, "numBackgroundImages");
+    readParameterBool(fileConfig, commandLineConfig, inputIsVideo, "inputIsVideo");
 
     readParameterString(fileConfig, commandLineConfig, saveModeStr, "saveMode");
 
@@ -291,6 +293,7 @@ void readParameters(int argc, char* argv[])
         backgroundCorrectionModel = averageMethod;
     } else if (backgroundCorrectionModelStr == "medianMethod") {
         backgroundCorrectionModel = medianMethod;
+    } else if (backgroundCorrectionModelStr == "noBackgroundCorrection") {
     } else {
         throw std::runtime_error(makeRed("Error: Invalid value for parameter backgroundCorrectionModel: " + backgroundCorrectionModelStr));
     }

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <mutex>
 #include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 #include <string>
@@ -17,7 +18,55 @@
 
 int globalCounter = 0;
 
-Info _read(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, const size_t& taskIdx, const size_t& taskSize, const std::vector<std::string>& files, Int* fileIndices, Image* imageBuffer)
+Info _read(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, const size_t& taskIdx, const size_t& taskSize,
+    Int* frameIndices, Image* imageBuffer, cv::VideoCapture* videoCaptures)
+{
+    Int* taskPtr = (Int*)imageBufferIndices;
+    cv::VideoCapture videoCapture = videoCaptures[threadId];
+    size_t numFrames = size_t(videoCapture.get(cv::CAP_PROP_FRAME_COUNT));
+
+    Int frameIdx = frameIndices[threadId];
+    Int maxFrameIdx = (threadId + 1) * numFrames / numReaderThreads;
+    if (Int(threadId) == numReaderThreads - 1) // last reader thread should handle all remaining files
+        maxFrameIdx = numFrames;
+
+    Int stop = frameIdx + Int(stackSize);
+    if (stop > maxFrameIdx || maxFrameIdx - stop < Int(stackSize)) { // handle images that are do not fill a stack.
+        stop = maxFrameIdx;
+    }
+
+    Int imageBufferIndex = taskPtr[taskIdx + 1];
+    Int size = 0;
+    cv::Mat helper;
+    while (frameIdx < stop) {
+        bool result = false;
+        while (!result && frameIdx < maxFrameIdx) {
+            result = videoCapture.read(helper);
+            if (helper.empty())
+                result = false;
+            frameIdx++;
+        }
+        if (result) {
+            cv::cvtColor(helper, imageBuffer[imageBufferIndex].originalImage, cv::COLOR_BGR2GRAY);
+            imageBuffer[imageBufferIndex].fileIdx = frameIdx - 1;
+            imageBufferIndex++;
+            size++;
+        }
+    }
+    taskPtr[taskIdx] = size;
+
+    // this worker is finished:
+    if (frameIdx >= maxFrameIdx) {
+        return ThreadManagerThisWorkerFinished;
+    }
+
+    frameIndices[threadId] = frameIdx;
+
+    return Success;
+}
+
+Info _read(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, const size_t& taskIdx, const size_t& taskSize,
+    const std::vector<std::string>& files, Int* fileIndices, Image* imageBuffer)
 {
     // cast pointer to right type
     Int* taskPtr = (Int*)imageBufferIndices;
@@ -33,11 +82,6 @@ Info _read(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, 
     if (stop > maxFileIdx || maxFileIdx - stop < Int(stackSize)) { // handle images that are do not fill a stack.
         stop = maxFileIdx;
     }
-
-    // {
-    //     std::unique_lock<std::mutex> lock(mutex);
-    //     std::cout << fileIdx << " " << stop << " " << maxFileIdx << std::endl;
-    // }
 
     // iterate over files and read images
     Int imageBufferIndex = taskPtr[taskIdx + 1];
@@ -69,7 +113,8 @@ Info _read(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, 
     return Success;
 }
 
-Info finishSegmenterTask(std::mutex& mutex, Image* imageBuffer, Int startPos, Int size, const std::vector<std::string>& files, const std::vector<std::vector<SegmenterObject>>& objects)
+Info finishSegmenterTask(std::mutex& mutex, Image* imageBuffer, Int startPos, Int size, const std::vector<std::string>& files,
+    const std::vector<std::vector<SegmenterObject>>& objects)
 {
     try {
         if (saveMode == oneFile) {
@@ -172,7 +217,8 @@ Info _detection(Image* imageBuffer, Int startPos, Int size, const std::vector<cv
     return Unknown;
 }
 
-Info _segment(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, const size_t& taskIdx, const size_t& taskSize, Image* imageBuffer, const std::vector<std::string>& files)
+Info _segment(const size_t& threadId, std::mutex& mutex, void* imageBufferIndices, const size_t& taskIdx, const size_t& taskSize,
+    Image* imageBuffer, const std::vector<std::string>& files)
 {
     Int* taskPtr = (Int*)imageBufferIndices;
     Int size = taskPtr[taskIdx];
@@ -191,30 +237,36 @@ Info _segment(const size_t& threadId, std::mutex& mutex, void* imageBufferIndice
     }
 
     std::vector<cv::Mat> backgrounds;
-    int start, end;
-    if (numBackgroundImages == size) { // background only needs to be computed once
-        backgrounds.resize(1);
-        backgroundCorrectionModel(workingImages, backgrounds[0], 0, size);
-    } else {
-        backgrounds.resize(size);
-        for (Int i = 0; i < size; i++) {
-            // compute background for every image. The background consits of the numBufferedStacks / 2 images to the left and right, if possible
-            if (numBackgroundImages < size) {
-                if (i > numBackgroundImages / 2) {
-                    if (i < size - numBackgroundImages / 2) {
-                        start = i - numBackgroundImages / 2;
-                        end = start + numBackgroundImages;
+    if (backgroundCorrectionModelStr != "noBackgroundCorrection") {
+        int start, end;
+        if (numBackgroundImages == size) { // background only needs to be computed once
+            backgrounds.resize(1);
+            backgroundCorrectionModel(workingImages, backgrounds[0], 0, size);
+        } else {
+            backgrounds.resize(size);
+            for (Int i = 0; i < size; i++) {
+                // compute background for every image. The background consits of the numBufferedStacks / 2 images to the left and right, if possible
+                if (numBackgroundImages < size) {
+                    if (i > numBackgroundImages / 2) {
+                        if (i < size - numBackgroundImages / 2) {
+                            start = i - numBackgroundImages / 2;
+                            end = start + numBackgroundImages;
+                        } else {
+                            end = size;
+                            start = end - numBackgroundImages;
+                        }
                     } else {
-                        end = size;
-                        start = end - numBackgroundImages;
+                        start = 0;
+                        end = numBackgroundImages;
                     }
-                } else {
-                    start = 0;
-                    end = numBackgroundImages;
+                    // print("index " + std::to_string(i) + "start " + std::to_string(start) + " end " + std::to_string(end), true, true);
+                    backgroundCorrectionModel(workingImages, backgrounds[i], start, end);
                 }
-                // print("index " + std::to_string(i) + "start " + std::to_string(start) + " end " + std::to_string(end), true, true);
-                backgroundCorrectionModel(workingImages, backgrounds[i], start, end);
             }
+        }
+    } else {
+        for (size_t i = 0; i < size; i++) {
+            backgrounds.push_back(cv::Mat::zeros(workingImages[i].rows, workingImages[i].cols, CV_8U));
         }
     }
 
@@ -234,10 +286,19 @@ Info _segment(const size_t& threadId, std::mutex& mutex, void* imageBufferIndice
     return Success;
 }
 
+void skipFrames(cv::VideoCapture& capture, size_t nFrames)
+{
+    for (size_t i = 0; i < nFrames; i++) {
+        bool result = capture.grab();
+        if (!result)
+            break;
+    }
+}
+
 void _taskLoop(const std::vector<std::string>& files)
 {
     Int* fileIndices = new Int[numReaderThreads];
-    // Index* bufferIndices = new Index[numBufferedStacks * (2 * stackSize + 1)]; // memory layout: { size1, i11, i12, ..., i1N, size2, i21, ... }
+    cv::VideoCapture* videoCaptures = new cv::VideoCapture[numReaderThreads];
     Int* bufferIndices = new Int[numBufferedStacks * 2]; // memory layout: { size1, start1, size2, start2, ... }
                                                          //
     // allocate memory for image buffer. Double the size to allow for stack overflows. This is wastefull of memory, but should be fine as only pointers are stored. The images are not allocated before reading.
@@ -253,14 +314,28 @@ void _taskLoop(const std::vector<std::string>& files)
         // }
     }
 
-    taskFunction readerFunction = [files, imageBuffer, fileIndices](const size_t& threadId, std::mutex& mutex, void* indices, const size_t& taskIdx, const size_t& taskSize) { return _read(threadId, mutex, indices, taskIdx, taskSize, files, fileIndices, imageBuffer); };
+    taskFunction readerFunction;
+    if (inputIsVideo) {
+        for (Int i = 0; i < numReaderThreads; i++) {
+            videoCaptures[i].open(sourcePath);
+            fileIndices[i] = size_t(videoCaptures[i].get(cv::CAP_PROP_FRAME_COUNT)) / numReaderThreads * i;
+            skipFrames(videoCaptures[i], fileIndices[i]);
+        }
+
+        readerFunction = [imageBuffer, fileIndices, videoCaptures](const size_t& threadId,
+                             std::mutex& mutex, void* indices, const size_t& taskIdx,
+                             const size_t& taskSize) { return _read(threadId, mutex, indices, taskIdx, taskSize, fileIndices, imageBuffer, videoCaptures); };
+    } else {
+        readerFunction = [files, imageBuffer, fileIndices](const size_t& threadId, std::mutex& mutex,
+                             void* indices, const size_t& taskIdx, const size_t& taskSize) { return _read(threadId,
+                                                                                                 mutex, indices, taskIdx, taskSize, files, fileIndices, imageBuffer); };
+        for (Int i = 0; i < numReaderThreads; i++) {
+            fileIndices[i] = files.size() / numReaderThreads * i;
+        }
+    }
     taskFunction segmenterFunction = [imageBuffer, files](const size_t& threadId, std::mutex& mutex, void* indices, const size_t& taskIdx, const size_t& taskSize) { return _segment(threadId, mutex, indices, taskIdx, taskSize, imageBuffer, files); };
 
     taskFunction functions[] = { readerFunction, segmenterFunction };
-
-    for (Int i = 0; i < numReaderThreads; i++) {
-        fileIndices[i] = files.size() / numReaderThreads * i;
-    }
 
     ThreadManager tmReader(bufferIndices, functions, numReaderThreads, true, numBufferedStacks);
     ThreadManager tmSegmenter(bufferIndices, functions, numSegmenterThreads, true, numBufferedStacks);
@@ -337,6 +412,7 @@ void _taskLoop(const std::vector<std::string>& files)
     //     imageBuffer[i].originalImage.release();
     // }
     delete[] imageBuffer;
+    delete[] videoCaptures;
 }
 
 void runSegmenter()
@@ -346,11 +422,21 @@ void runSegmenter()
         checkInfo(initWriter(), enableDetailedPrinting, enableDetailedPrinting);
 
     std::vector<std::string> files;
-    getFiles(sourcePath, files);
-    print("Found " + std::to_string(files.size()) + " files");
+    if (inputIsVideo) {
+        cv::VideoCapture videoCapture;
+        videoCapture.open(sourcePath);
+        size_t nFrames = videoCapture.get(cv::CAP_PROP_FRAME_COUNT);
+        for (size_t i = 0; i < nFrames; i++) {
+            files.push_back(splitLast(sourcePath, '/') + "_frame_" + std::to_string(i) + ".png");
+        }
 
-    if (numReaderThreads * stackSize > Int(files.size())) {
-        print(makeYellow("Not enough images to fill all reader threads. Decrease the number of reader threads."), true, true);
+    } else {
+        getFiles(sourcePath, files);
+        print("Found " + std::to_string(files.size()) + " files");
+
+        if (numReaderThreads * stackSize > Int(files.size())) {
+            print(makeYellow("Not enough images to fill all reader threads. Decrease the number of reader threads."), true, true);
+        }
     }
 
     _taskLoop(files);

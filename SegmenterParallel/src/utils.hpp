@@ -72,6 +72,7 @@ extern bool resizeToImageWidthHeight;
 extern bool invertImages;
 extern std::string backgroundCorrectionModelStr;
 extern Int numBackgroundImages;
+extern bool inputIsVideo;
 
 // Segmenter settings:
 extern double minObjectArea;

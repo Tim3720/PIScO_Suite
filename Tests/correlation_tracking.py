@@ -78,7 +78,7 @@ while (ret):
     if last_cnt is None:
         continue
     else:
-        score = cv.matchShapes(last_cnt, cnt, 1, 0)
+        score = cv.matchShapes(last_cnt, cnt, 2, 0)
         cv.putText(frame, str(score), (10, 50), cv.FONT_HERSHEY_PLAIN, 3, (0, 255, 0), 2)
 
     cv.drawContours(frame, [cnt], -1, (0, 255, 0))

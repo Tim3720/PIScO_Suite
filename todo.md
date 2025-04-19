@@ -3,12 +3,15 @@
 [ ] Test libtorch integration
 
 # GenerateCrops
-[ ] Implement code to genreate crops from the input files of the segmenter
-- Efficient implementation: Only read metadata and bounding box areas from the tif images, not the full image. 
+[x] Implement code to genreate crops from the input files of the segmenter
 
 
 # SinciVinci
 [ ] Implement SinciVinci with the modules 
+
+# Tracking based Segmenting
+- Post processing step on the segmenter data? I.e. first run the segmenter on the images to generate data, then use the generated data to track objects accross multiple images.
+- This would drastically reduce the number of objects for e.g. videos and would allow do measure velocity distribuitions etc.
 
 
 # Ideas: 
