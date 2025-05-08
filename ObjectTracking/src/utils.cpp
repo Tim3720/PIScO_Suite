@@ -39,7 +39,7 @@ std::string makeBlue(std::string str)
     return helper;
 }
 
-void splitStringOnChar(std::vector<std::string> dst, const std::string& str, char c)
+void splitStringOnChar(std::vector<std::string>& dst, const std::string& str, char c)
 {
     std::stringstream stream(str);
     std::string segment;

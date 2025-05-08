@@ -24,15 +24,19 @@ struct ImageInput {
 
 // Handles all data describing one object
 struct ObjectData {
-    std::vector<cv::Point> contour;
-    int imageId;
-    float area;
-    uint16_t x;
-    uint16_t y;
-    uint16_t w;
-    uint16_t h;
+    std::vector<cv::Point> m_contour;
+    int m_imageId;
+    float m_area;
+    uint16_t m_x;
+    uint16_t m_y;
+    uint16_t m_w;
+    uint16_t m_h;
 
-    ObjectData() : contour({}), imageId(-1), area(0), x(0), y(0), w(0), h(0) {};
+    ObjectData()
+        : m_contour({}), m_imageId(-1), m_area(0), m_x(0), m_y(0), m_w(0), m_h(0) {};
+    ObjectData(const ObjectData& other)
+        : m_contour(other.m_contour), m_imageId(other.m_imageId), m_area(other.m_area),
+          m_x(other.m_x), m_y(other.m_y), m_w(other.m_w), m_h(other.m_h) {};
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////

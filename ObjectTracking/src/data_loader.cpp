@@ -56,27 +56,42 @@ void decodeObjectLine(ObjectData& dst, std::string element, size_t idx)
         case 1:  // Image filename
             break;
         case 2:  // x
-            dst.x = std::stoi(element);
+            dst.m_x = std::stoi(element);
             break;
         case 3:  // y
-            dst.y = std::stoi(element);
+            dst.m_y = std::stoi(element);
             break;
         case 4:  // width
-            dst.w = std::stoi(element);
+            dst.m_w = std::stoi(element);
             break;
         case 5:  // height
-            dst.h = std::stoi(element);
+            dst.m_h = std::stoi(element);
             break;
         case 6:  // contour area
-            dst.area = std::stof(element);
+            dst.m_area = std::stof(element);
             break;
         case 7:  // threshold
             break;
         case 8:  // contour
             std::vector<std::string> contours;
-            // TODO: remove leading { and trailing }, then split at |, followed by a split
+            std::string contourHelper;
+            size_t idx;
+            // remove leading { and trailing }, then split at |, followed by a split
             // at ;. Then convert the result to cv::Point and add it to the dst.contour
             // vector
+            element = element.substr(1, element.size() - 2);
+            splitStringOnChar(contours, element, '|');
+            for (size_t i = 0; i < contours.size(); i++) {
+                contourHelper = contours[i];
+                for (idx = 0; idx < contourHelper.size(); idx++) {
+                    if (contourHelper[idx] == ';') {
+                        break;
+                    }
+                }
+                cv::Point p(std::stoi(contourHelper.substr(0, idx + 1)),
+                    std::stoi(contourHelper.substr(idx + 1)));
+                dst.m_contour.push_back(p);
+            }
             break;
     }
 }
@@ -102,19 +117,22 @@ Error getImageData(std::vector<ObjectData>& dst, size_t imageId, std::ifstream& 
         }
         std::vector<std::string> segments;
         splitStringOnChar(segments, line, ',');
-        size_t nCols = segments.size();
 
-        size_t idx = 0;
+        size_t idx;
+        std::string element;
         ObjectData objectData;
-        while (std::getline(file, line, ',')) {
-            idx %= nCols;
-
-            decodeObjectLine(objectData, line, idx);
-
-            idx++;
-            // TODO:
-            if (idx == nCols) {  // add new object:
+        std::stringstream lineStream;
+        while (std::getline(file, line)) {  // get next row:
+            lineStream = std::stringstream(line);
+            idx = 0;
+            while (std::getline(lineStream, element, ',')) {  // get elements in row:
+                // decode row
+                decodeObjectLine(objectData, element, idx);
+                // std::cout << idx << ": " << element << std::endl;
+                idx++;
             }
+            dst.push_back(objectData);
+            objectData = ObjectData();
         }
     } else {
         throw std::runtime_error(makeRed("OneFilePerObject input not implemented"));

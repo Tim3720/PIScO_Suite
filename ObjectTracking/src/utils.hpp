@@ -27,6 +27,9 @@ enum ObjectDataInputMode : char {
 extern ImageInputMode e_imageInputMode;
 extern ObjectDataInputMode e_objectDataInputMode;
 
+extern float e_maxMatchingDistance;
+extern float e_maxMatchingTimeDifference;
+
 extern bool e_warningsAsError;
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +73,7 @@ void defaultSettings();
 std::string makeRed(std::string str);
 std::string makeYellow(std::string str);
 std::string makeBlue(std::string str);
-void splitStringOnChar(std::vector<std::string> dst, const std::string& str, char c);
+void splitStringOnChar(std::vector<std::string>& dst, const std::string& str, char c);
 std::string splitAllBeforeLast(const std::string& str, char c);
 
 /////////////////////////////////////////////////////////////////////////////////////////
