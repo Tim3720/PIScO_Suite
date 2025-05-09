@@ -5,11 +5,17 @@
 void checkErrors(int bufferStartPos, int bufferEndPos)
 {
     if (bufferStartPos >= bufferEndPos)
-        throw std::invalid_argument("Buffer start position must be less than buffer end position.");
+        throw std::invalid_argument(
+            "Buffer start position must be less than buffer end position.");
 }
 
-/* Min-Method for background correction. Computes the pixelwise minimum of the images in the buffer, starting at position bufferStartPos and ending at position bufferEndPos. The Min-Method can efficiently compute a near perfect background for images with dark background and bright objects (e.g. inverted PISCO images). For a perfect background, the real background of each pixel needs to be visible only once in all images. */
-void minMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+/* Min-Method for background correction. Computes the pixelwise minimum of the images in
+ * the buffer, starting at position bufferStartPos and ending at position bufferEndPos.
+ * The Min-Method can efficiently compute a near perfect background for images with dark
+ * background and bright objects (e.g. inverted PISCO images). For a perfect background,
+ * the real background of each pixel needs to be visible only once in all images. */
+void minMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background,
+    int bufferStartPos, int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     background = imageBuffer[bufferStartPos].clone();
@@ -18,8 +24,12 @@ void minMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, int
     }
 }
 
-/* Min-Max-Method for background correction. Same as the Min-Method, but with an additional calculation of the pairwise maximum of the images before computing the minimum. This reduces the artefacts from diffraction of the objects, which can be brighter (darker in the inverted images) than the background. */
-void minMaxMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+/* Min-Max-Method for background correction. Same as the Min-Method, but with an
+ * additional calculation of the pairwise maximum of the images before computing the
+ * minimum. This reduces the artefacts from diffraction of the objects, which can be
+ * brighter (darker in the inverted images) than the background. */
+void minMaxMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background,
+    int bufferStartPos, int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     cv::Mat helper;
@@ -31,8 +41,12 @@ void minMaxMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, 
     helper.release();
 }
 
-/* Average-Method for background correction. Computes the pixelwise average of the images in the buffer, starting at position bufferStartPos and ending at position bufferEndPos. The Average-Method is fast, but lacks accuracy. Using more images to compute the background ensures a higher accuracy. */
-void averageMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+/* Average-Method for background correction. Computes the pixelwise average of the images
+ * in the buffer, starting at position bufferStartPos and ending at position bufferEndPos.
+ * The Average-Method is fast, but lacks accuracy. Using more images to compute the
+ * background ensures a higher accuracy. */
+void averageMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background,
+    int bufferStartPos, int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     cv::Mat helper;
@@ -46,8 +60,12 @@ void averageMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background,
     helper.release();
 }
 
-/* Rolling Average-Method for background correction. Same as Average-Method, but more efficiently if an additional rolling background sum is stored. First, oldImage is subtracted from the background sum, then the new image is added and the background will be computed from the rolling sum. */
-void rollingAverageMethod(cv::Mat& backgroundSum, cv::Mat& background, const cv::Mat& oldImage, const cv::Mat& newImage, int numBackgroundImages)
+/* Rolling Average-Method for background correction. Same as Average-Method, but more
+ * efficiently if an additional rolling background sum is stored. First, oldImage is
+ * subtracted from the background sum, then the new image is added and the background will
+ * be computed from the rolling sum. */
+void rollingAverageMethod(cv::Mat& backgroundSum, cv::Mat& background,
+    const cv::Mat& oldImage, const cv::Mat& newImage, int numBackgroundImages)
 {
     cv::subtract(backgroundSum, oldImage, backgroundSum, cv::noArray(), CV_64F);
     cv::add(backgroundSum, newImage, backgroundSum, cv::noArray(), CV_64F);
@@ -55,7 +73,8 @@ void rollingAverageMethod(cv::Mat& backgroundSum, cv::Mat& background, const cv:
     background.convertTo(background, CV_8U);
 }
 
-void medianMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+void medianMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background,
+    int bufferStartPos, int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     int rows = imageBuffer[0].rows;
@@ -69,10 +88,11 @@ void medianMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, 
     // Convert grayscale images to a single channel 3D matrix: (N, rows*cols)
     cv::Mat imageStack(N, rows * cols, imageBuffer[0].type());
     for (int i = 0; i < N; ++i) {
-        if (imageBuffer[i].rows != rows || imageBuffer[i].cols != cols || imageBuffer[i].type() != imageBuffer[0].type()) {
+        if (imageBuffer[i].rows != rows || imageBuffer[i].cols != cols ||
+            imageBuffer[i].type() != imageBuffer[0].type()) {
             throw std::invalid_argument("All images must have the same size and type.");
         }
-        imageBuffer[i].reshape(1, 1).copyTo(imageStack.row(i)); // Flatten and copy
+        imageBuffer[i].reshape(1, 1).copyTo(imageStack.row(i));  // Flatten and copy
     }
     // Sort along the first axis (depth)
     cv::sort(imageStack, imageStack, cv::SORT_EVERY_COLUMN);
@@ -81,7 +101,8 @@ void medianMethod(const std::vector<cv::Mat>& imageBuffer, cv::Mat& background, 
     background = medianFlattened.reshape(channels, rows);
 }
 
-void minMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+void minMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos,
+    int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     background = imageBuffer[bufferStartPos].clone();
@@ -90,8 +111,12 @@ void minMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferSta
     }
 }
 
-/* Min-Max-Method for background correction. Same as the Min-Method, but with an additional calculation of the pairwise maximum of the images before computing the minimum. This reduces the artefacts from diffraction of the objects, which can be brighter (darker in the inverted images) than the background. */
-void minMaxMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+/* Min-Max-Method for background correction. Same as the Min-Method, but with an
+ * additional calculation of the pairwise maximum of the images before computing the
+ * minimum. This reduces the artefacts from diffraction of the objects, which can be
+ * brighter (darker in the inverted images) than the background. */
+void minMaxMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos,
+    int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     cv::Mat helper;
@@ -103,8 +128,12 @@ void minMaxMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int buffer
     helper.release();
 }
 
-/* Average-Method for background correction. Computes the pixelwise average of the images in the buffer, starting at position bufferStartPos and ending at position bufferEndPos. The Average-Method is fast, but lacks accuracy. Using more images to compute the background ensures a higher accuracy. */
-void averageMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+/* Average-Method for background correction. Computes the pixelwise average of the images
+ * in the buffer, starting at position bufferStartPos and ending at position bufferEndPos.
+ * The Average-Method is fast, but lacks accuracy. Using more images to compute the
+ * background ensures a higher accuracy. */
+void averageMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos,
+    int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     cv::Mat helper;
@@ -118,7 +147,8 @@ void averageMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int buffe
     helper.release();
 }
 
-void medianMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos, int bufferEndPos)
+void medianMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int bufferStartPos,
+    int bufferEndPos)
 {
     checkErrors(bufferStartPos, bufferEndPos);
     int rows = imageBuffer[0].rows;
@@ -132,10 +162,11 @@ void medianMethodPtr(const cv::Mat* imageBuffer, cv::Mat& background, int buffer
     // Convert grayscale images to a single channel 3D matrix: (N, rows*cols)
     cv::Mat imageStack(N, rows * cols, imageBuffer[0].type());
     for (int i = 0; i < N; ++i) {
-        if (imageBuffer[i].rows != rows || imageBuffer[i].cols != cols || imageBuffer[i].type() != imageBuffer[0].type()) {
+        if (imageBuffer[i].rows != rows || imageBuffer[i].cols != cols ||
+            imageBuffer[i].type() != imageBuffer[0].type()) {
             throw std::invalid_argument("All images must have the same size and type.");
         }
-        imageBuffer[i].reshape(1, 1).copyTo(imageStack.row(i)); // Flatten and copy
+        imageBuffer[i].reshape(1, 1).copyTo(imageStack.row(i));  // Flatten and copy
     }
     // Sort along the first axis (depth)
     cv::sort(imageStack, imageStack, cv::SORT_EVERY_COLUMN);
