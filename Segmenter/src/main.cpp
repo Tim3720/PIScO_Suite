@@ -1,11 +1,17 @@
 #include "error.hpp"
+#include "reader.hpp"
+#include "settings.hpp"
 #include <iostream>
 
-int main()
+int main(int argc, char** argv)
 {
-    Error error = Error::InvalidInput;
-    error.addMessage("Test");
-    error.check();
+    if (argc > 1) {
+        // loadSettings(argv[1]);
+    } else {
+        defaultSettings();
+    }
 
-    std::cout << "Hello world\n";
+    std::vector<std::string> files;
+    getFiles(files).check();
+    readImages(files);
 }

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(SegmenterParallel)
+project(Segmenter)
 
 set(CMAKE_CXX_STANDARD 23) # Specify C++ standard version
 set(CMAKE_CXX_STANDARD_REQUIRED ON) # Ensure the chosen version is used
@@ -9,6 +9,11 @@ set(PROJECT_NAME "Segmenter")
 
 set(ERROR_DATA_TYPES "../GlobalDataTypes/Error")
 file(GLOB ERROR_DATA_TYPE_FILES ${ERROR_DATA_TYPES}/*.cpp)
+include_directories(${ERROR_DATA_TYPES})
+
+set(PARSER "../GlobalDataTypes/Parser")
+file(GLOB PARSER_FILES ${PARSER}/*.cpp)
+include_directories(${PARSER})
 
 # Add OpenCV support
 find_package(OpenCV REQUIRED)
@@ -19,8 +24,6 @@ if(OpenCV_FOUND)
 else()
   message(FATAL_ERROR "OpenCV not found. Please install OpenCV and try again.")
 endif()
-
-include_directories(${ERROR_DATA_TYPES})
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror")
@@ -55,7 +58,8 @@ file(GLOB HEADER_FILES ${CMAKE_SOURCE_DIR}/include/*.hpp) # Collect all .hpp
                                                           # directory
 
 add_compile_definitions("DEBUG=$<CONFIG:Debug>")
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${ERROR_DATA_TYPE_FILES})
+add_executable(${PROJECT_NAME} ${SRC_FILES} ${ERROR_DATA_TYPE_FILES}
+                               ${PARSER_FILES})
 
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
 
