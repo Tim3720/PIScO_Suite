@@ -2,4 +2,4 @@
 #include <string>
 #include <vector>
 
-void runCorrection(const std::vector<std::string>& files, size_t fileIndexOffset);
+void runCorrection(const std::vector<std::string>& files);

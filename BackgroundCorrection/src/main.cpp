@@ -23,5 +23,5 @@ int main(int argc, char** argv)
     std::vector<std::string> files;
     getFiles(files).check();
     writeFileNameDecoding(files);
-    runCorrection(files, 0);
+    runCorrection(files);
 }
