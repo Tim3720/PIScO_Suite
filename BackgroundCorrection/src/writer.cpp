@@ -33,10 +33,11 @@ void Writer::writeImage(const cv::Mat& img, size_t fileIndex, bool lastImage)
                             std::to_string(fileIndex) + ".png",
                 color);
         } else if (lastImage) {
-            cv::merge(channels, color);
-            if (counter == 0) {
-                cv::imwrite(e_savePath + std::to_string(fileIndex) + ".png", color);
+            if (counter == 1) {
+                cv::imwrite(e_savePath + std::to_string(fileIndex) + ".png", channels[0]);
             } else {
+                channels[2].setTo(0);
+                cv::merge(channels, color);
                 cv::imwrite(e_savePath + std::to_string(fileIndex - 1) + "_" +
                                 std::to_string(fileIndex) + ".png",
                     color);
