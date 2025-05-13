@@ -34,7 +34,12 @@ void loadSettings(char* filename)
     std::unordered_map<std::string, std::string> config = parseConfigFile(filename);
 
     readParameterString(config, e_sourcePath, "sourcePath");
+    if (e_sourcePath.back() != '/')
+        e_sourcePath += "/";
     readParameterString(config, e_savePath, "savePath");
+    if (e_savePath.back() != '/')
+        e_savePath += "/";
+
     std::string colormode;
     readParameterString(config, colormode, "colorMode");
     if (colormode == "gray")
@@ -43,8 +48,11 @@ void loadSettings(char* filename)
         e_colorMode = cv::IMREAD_COLOR;
     else
         throw std::runtime_error(makeRed("Invalid colormode: " + colormode));
+    // TODO: Implement single/multi-color channel
+
     readParameterInt(config, e_nBackgroundImages, "nBackgroundImages");
     std::string backgroundCorrectionModel;
+
     readParameterString(config, backgroundCorrectionModel, "backgroundCorrectionModel");
     if (backgroundCorrectionModel == "minMaxMethod")
         e_backgroundCorrectionModel = minMaxMethod;
@@ -57,6 +65,7 @@ void loadSettings(char* filename)
     else
         throw std::runtime_error(
             makeRed("Invalid background correction mode: " + backgroundCorrectionModel));
+
     readParameterBool(config, e_useMultiChannelSaveMode, "useMultiChannelSaveMode");
     readParameterInt(config, e_nThreads, "nThreads");
 }

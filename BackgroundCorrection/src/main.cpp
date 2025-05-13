@@ -1,6 +1,7 @@
 #include "correction.hpp"
 #include "error.hpp"
 #include "settings.hpp"
+#include <iostream>
 
 int main(int argc, char** argv)
 {
