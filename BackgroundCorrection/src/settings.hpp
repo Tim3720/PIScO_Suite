@@ -14,6 +14,7 @@ extern size_t e_nBackgroundImages;  // This has to be an even number!
 extern std::function<void(const std::vector<cv::Mat>&, cv::Mat&, int, int)>
     e_backgroundCorrectionModel;
 extern bool e_useMultiChannelSaveMode;
+extern size_t e_nThreads;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Functions:

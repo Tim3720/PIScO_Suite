@@ -1,5 +1,4 @@
 #pragma once
-#include <string>
-#include <vector>
+#include "error.hpp"
 
-void runCorrection(const std::vector<std::string>& files);
+Error runCorrection();

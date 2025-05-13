@@ -1,11 +1,6 @@
 #include "correction.hpp"
 #include "error.hpp"
-#include "reader.hpp"
 #include "settings.hpp"
-#include "writer.hpp"
-#include <iostream>
-#include <opencv2/highgui.hpp>
-#include <opencv2/imgproc.hpp>
 
 int main(int argc, char** argv)
 {
@@ -20,8 +15,5 @@ int main(int argc, char** argv)
         defaultSettings();
     }
 
-    std::vector<std::string> files;
-    getFiles(files).check();
-    writeFileNameDecoding(files);
-    runCorrection(files);
+    runCorrection().check();
 }

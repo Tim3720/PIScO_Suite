@@ -13,6 +13,7 @@ size_t e_nBackgroundImages;
 std::function<void(const std::vector<cv::Mat>&, cv::Mat&, int, int)>
     e_backgroundCorrectionModel;
 bool e_useMultiChannelSaveMode;
+size_t e_nThreads;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Functions:
@@ -25,47 +26,37 @@ void defaultSettings()
     e_nBackgroundImages = 10;
     e_backgroundCorrectionModel = minMaxMethod;
     e_useMultiChannelSaveMode = true;
+    e_nThreads = 6;
 }
 
 void loadSettings(char* filename)
 {
-    std::unordered_map<std::string, std::string> settings = parseConfigFile(filename);
+    std::unordered_map<std::string, std::string> config = parseConfigFile(filename);
 
-    readParameterString(settings, e_sourcePath, "sourcePath");
-    if (e_sourcePath.back() != '/')
-        e_sourcePath += "/";
-
-    readParameterString(settings, e_savePath, "savePath");
-    if (e_savePath.back() != '/')
-        e_savePath += "/";
-
-    std::string colorModeHelper;
-    readParameterString(settings, colorModeHelper, "colorMode");
-    if (colorModeHelper == "gray")
+    readParameterString(config, e_sourcePath, "sourcePath");
+    readParameterString(config, e_savePath, "savePath");
+    std::string colormode;
+    readParameterString(config, colormode, "colorMode");
+    if (colormode == "gray")
         e_colorMode = cv::IMREAD_GRAYSCALE;
-    else if (colorModeHelper == "rgb")
+    else if (colormode == "rgb")
         e_colorMode = cv::IMREAD_COLOR;
     else
-        throw std::runtime_error(
-            makeRed("Invalid value for setting colorMode: " + colorModeHelper));
-    // TODO: Implement single/multi channel mode
-
-    readParameterInt(settings, e_nBackgroundImages, "nBackgroundImages");
-
-    std::string bgCorrectionModelHelper;
-    readParameterString(settings, bgCorrectionModelHelper, "backgroundCorrectionModel");
-    if (bgCorrectionModelHelper == "minMethod")
-        e_backgroundCorrectionModel = minMethod;
-    else if (bgCorrectionModelHelper == "minMaxMethod")
+        throw std::runtime_error(makeRed("Invalid colormode: " + colormode));
+    readParameterInt(config, e_nBackgroundImages, "nBackgroundImages");
+    std::string backgroundCorrectionModel;
+    readParameterString(config, backgroundCorrectionModel, "backgroundCorrectionModel");
+    if (backgroundCorrectionModel == "minMaxMethod")
         e_backgroundCorrectionModel = minMaxMethod;
-    else if (bgCorrectionModelHelper == "averageMethod")
+    else if (backgroundCorrectionModel == "minMethod")
+        e_backgroundCorrectionModel = minMethod;
+    else if (backgroundCorrectionModel == "averageMethod")
         e_backgroundCorrectionModel = averageMethod;
-    else if (bgCorrectionModelHelper == "medianMethod")
+    else if (backgroundCorrectionModel == "medianMethod")
         e_backgroundCorrectionModel = medianMethod;
     else
         throw std::runtime_error(
-            makeRed("Invalid value for setting backgroundCorrectionModel: " +
-                    bgCorrectionModelHelper));
-
-    readParameterBool(settings, e_useMultiChannelSaveMode, "useMultiChannelSaveMode");
+            makeRed("Invalid background correction mode: " + backgroundCorrectionModel));
+    readParameterBool(config, e_useMultiChannelSaveMode, "useMultiChannelSaveMode");
+    readParameterInt(config, e_nThreads, "nThreads");
 }
