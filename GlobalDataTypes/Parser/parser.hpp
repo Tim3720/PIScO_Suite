@@ -7,6 +7,8 @@ std::unordered_map<std::string, std::string> parseConfigFile(std::string filenam
 template <typename T>
 void readParameterInt(std::unordered_map<std::string, std::string>& fileConfig,
     T& parameter, std::string name);
+void readParameterInt(std::unordered_map<std::string, std::string>& fileConfig,
+    size_t& parameter, std::string name);
 
 void readParameterDouble(std::unordered_map<std::string, std::string>& fileConfig,
     double& parameter, std::string name);

@@ -50,6 +50,19 @@ void readParameterInt(std::unordered_map<std::string, std::string>& fileConfig,
               << std::endl;
 }
 
+void readParameterInt(std::unordered_map<std::string, std::string>& fileConfig,
+    size_t& parameter, std::string name)
+{
+    auto foundKey = fileConfig.find(name);
+    if (foundKey == fileConfig.end()) {
+        throw std::runtime_error("Error: " + name + " not found in the config file.");
+    }
+    parameter = size_t(std::stoi(fileConfig[name]));
+    std::cout << "Found Parameter " + name + " of type int with value " +
+                     std::to_string(parameter)
+              << std::endl;
+}
+
 void readParameterDouble(std::unordered_map<std::string, std::string>& fileConfig,
     double& parameter, std::string name)
 {
