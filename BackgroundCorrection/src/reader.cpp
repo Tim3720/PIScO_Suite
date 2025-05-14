@@ -38,6 +38,7 @@ Error getImage(cv::Mat& img, size_t fileIndex, const std::vector<std::string>& f
     } catch (const cv::Exception& e) {
         Error error = Error::RuntimeError;
         error.addMessage(e.what());
+        return error;
     }
 
     if (img.empty()) {

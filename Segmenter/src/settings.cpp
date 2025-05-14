@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 std::string e_sourcePath;
 std::string e_savePath;
+bool e_useMultiChannelInputMode;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Functions:
@@ -13,4 +14,6 @@ void defaultSettings()
 {
     e_sourcePath = "/home/tim/Documents/ArbeitTestData/TestResults/";
     e_savePath = "/home/tim/Documents/ArbeitTestData/TestResults/";
+
+    e_useMultiChannelInputMode = true;
 }

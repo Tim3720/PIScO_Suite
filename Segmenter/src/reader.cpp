@@ -1,11 +1,7 @@
 #include "reader.hpp"
 #include "settings.hpp"
 #include <algorithm>
-#include <chrono>
 #include <filesystem>
-#include <iostream>
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
 
 Error getFiles(std::vector<std::string>& files)
 {
@@ -27,24 +23,24 @@ Error getFiles(std::vector<std::string>& files)
     return Error::Success;
 }
 
-void readImages(const std::vector<std::string>& files)
+Error readImage(cv::Mat& image, size_t fileIndex, const std::vector<std::string>& files)
 {
-    cv::Mat img;
-    // cv::Mat channels[3] = {};
-    // std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-    // for (const std::string& file : files) {
-    //     img = cv::imread(file, cv::IMREAD_COLOR);
-    //     cv::split(img, channels);
-    // }
-    std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-    for (const std::string& file : files) {
-        img = cv::imread(file, cv::IMREAD_GRAYSCALE);
+    cv::ImreadModes colorMode =
+        e_useMultiChannelInputMode ? cv::IMREAD_COLOR : cv::IMREAD_GRAYSCALE;
+    try {
+        image = cv::imread(files[fileIndex], colorMode);
+    } catch (const cv::Exception& e) {
+        Error error = Error::RuntimeError;
+        error.addMessage(e.what());
+        return error;
     }
 
-    double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
-                          std::chrono::high_resolution_clock::now() - start)
-                          .count() /
-                      1000.;
-    std::cout << "Total duration: " << duration << "s\n";
-    std::cout << "Avg time per img: " << duration / files.size() << "s\n";
+    if (image.empty()) {
+        Error error = Error::EmptyImage;
+        error.addMessage("Empty image for file '" + files[fileIndex] + "' at index " +
+                         std::to_string(fileIndex));
+        return error;
+    }
+
+    return Error::Success;
 }
