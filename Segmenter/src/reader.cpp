@@ -10,7 +10,11 @@ Error getFiles(std::vector<std::string>& files)
             if (entry.is_directory()) {
                 continue;
             }
-            files.push_back(entry.path().string());
+            std::string path = entry.path().string();
+            std::string filetype = path.substr(path.size() - 3, path.size());
+            if (filetype == "png" || filetype == "tif" || filetype == "jpg") {
+                files.push_back(path);
+            }
         }
     } catch (const std::exception& e) {
         Error error = Error::RuntimeError;

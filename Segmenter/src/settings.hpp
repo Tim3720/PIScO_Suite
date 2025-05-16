@@ -8,7 +8,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 extern std::string e_sourcePath;
 extern std::string e_savePath;
+
 extern bool e_useMultiChannelInputMode;
+extern size_t e_nThreads;
 
 extern double e_minObjectArea;
 

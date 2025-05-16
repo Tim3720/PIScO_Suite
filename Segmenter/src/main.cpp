@@ -1,5 +1,5 @@
 #include "error.hpp"
-#include "reader.hpp"
+#include "segmenter.hpp"
 #include "settings.hpp"
 #include <iostream>
 
@@ -16,7 +16,5 @@ int main(int argc, char** argv)
         defaultSettings();
     }
 
-    std::vector<std::string> files;
-    getFiles(files).check();
-    readImages(files);
+    runSegmenter().check();
 }

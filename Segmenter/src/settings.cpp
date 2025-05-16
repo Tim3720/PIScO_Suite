@@ -5,7 +5,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 std::string e_sourcePath;
 std::string e_savePath;
+
+size_t e_nThreads;
 bool e_useMultiChannelInputMode;
+
+double e_minObjectArea;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Functions:
@@ -16,4 +20,7 @@ void defaultSettings()
     e_savePath = "/home/tim/Documents/ArbeitTestData/TestResults/";
 
     e_useMultiChannelInputMode = true;
+    e_nThreads = 8;
+
+    e_minObjectArea = 100;
 }
