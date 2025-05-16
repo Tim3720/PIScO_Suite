@@ -17,6 +17,7 @@ outputs = { self, nixpkgs, flake-utils, ... }:
         };
         libs = [
             pkgs.libcxx
+            pkgs.hdf5
         ];
     in
         with pkgs;
@@ -35,8 +36,11 @@ outputs = { self, nixpkgs, flake-utils, ... }:
                     libcxx
                     pkg-config
                     gcc
+                    hdf5
                 ];
                 buildInputs = with pkgs; [
+                    python311Packages.h5py
+                    python311Packages.matplotlib
                 ];
                 shellHook = ''
                 '';

@@ -10,13 +10,15 @@
 #include <thread>
 
 // Runs the segmentation algorithm on the given grayscale image.
-Error getObjects(std::vector<SegmenterObject>& dst, cv::Mat& image, size_t imageIndex)
+Error getObjects(std::vector<SegmenterObject>& dst, const cv::Mat& image,
+    size_t imageIndex)
 {
     std::vector<std::vector<cv::Point>> contours;
     double threshold;
     try {
-        threshold = cv::threshold(image, image, 0, 255, cv::THRESH_TRIANGLE);
-        cv::findContours(image, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
+        cv::Mat thresh;
+        threshold = cv::threshold(image, thresh, 0, 255, cv::THRESH_TRIANGLE);
+        cv::findContours(thresh, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_SIMPLE);
     } catch (const cv::Exception& e) {
         Error error = Error::RuntimeError;
         error.addMessage("Error in segment: " + std::string(e.what()));
@@ -37,6 +39,7 @@ Error getObjects(std::vector<SegmenterObject>& dst, cv::Mat& image, size_t image
         object.m_contour = contours[i];
         object.m_boundingBox = cv::boundingRect(contours[i]);
         object.m_imageId = imageIndex;
+        object.m_crop = image(object.m_boundingBox).clone();
         dst.push_back(object);
     }
     dst.shrink_to_fit();
@@ -86,13 +89,11 @@ Error getImageIds(std::vector<int>& dst, std::string filename)
     return Error::Success;
 }
 
-Error segment(size_t fileIndex, Writer& writer, const std::vector<std::string>& files)
+Error segment(size_t fileIndex, H5Writer& writer, const std::vector<std::string>& files)
 {
     std::string filename = files[fileIndex];
     cv::Mat image;
     readImage(image, fileIndex, files).check();
-
-    std::vector<SegmenterObject> objects;
 
     if (e_useMultiChannelInputMode) {  // image is given in multi-channel mode, i.e. one
                                        // image per channel
@@ -104,7 +105,10 @@ Error segment(size_t fileIndex, Writer& writer, const std::vector<std::string>& 
         cv::split(image, channels);
         // find objects in each valid channel
         for (size_t i = 0; i < imageIds.size(); i++) {
+            std::vector<SegmenterObject> objects;
             getObjects(objects, channels[i], imageIds[i]).check();
+            // write objects
+            writer.writeObjects(objects, imageIds[i], image).check();
         }
 
     } else {  // image is given in grayscale
@@ -118,16 +122,16 @@ Error segment(size_t fileIndex, Writer& writer, const std::vector<std::string>& 
             return error;
         }
         // search objects on image:
+        std::vector<SegmenterObject> objects;
         getObjects(objects, image, imageId).check();
+        // write objects
+        writer.writeObjects(objects, imageId, image).check();
     }
-    // write objects
-    writer.writeObjects(objects).check();
-    objects.clear();
 
     return Error::Success;
 }
 
-void segmentThread(size_t startIndex, size_t stopIndex, Writer& writer,
+void segmentThread(size_t startIndex, size_t stopIndex, H5Writer& writer,
     const std::vector<std::string>& files)
 {
     size_t fileIndex = startIndex;
@@ -143,7 +147,7 @@ Error runSegmenter()
     std::vector<std::string> files;
     getFiles(files).check();
 
-    Writer writer;
+    H5Writer writer;
 
     std::vector<std::thread> threads;
     threads.resize(e_nThreads - 1);
@@ -157,10 +161,13 @@ Error runSegmenter()
     for (std::thread& t : threads)
         t.join();
 
+    // close save file
+    writer.m_saveFile.close();
+
     double duration = std::chrono::duration_cast<std::chrono::milliseconds>(
                           std::chrono::high_resolution_clock::now() - start)
                           .count() /
-                      1000;
+                      1000.;
     std::cout << "Total runtime: " << duration << "s\n";
     std::cout << "Avg. runtime per image: " << duration / files.size() << "s\n";
 

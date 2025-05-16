@@ -20,7 +20,7 @@ void defaultSettings()
     e_savePath = "/home/tim/Documents/ArbeitTestData/TestResults/";
 
     e_useMultiChannelInputMode = true;
-    e_nThreads = 8;
+    e_nThreads = 6;
 
     e_minObjectArea = 100;
 }

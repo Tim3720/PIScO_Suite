@@ -18,6 +18,9 @@ include_directories(${PARSER})
 # Add OpenCV support
 find_package(OpenCV REQUIRED)
 
+# Add HDF5 support
+find_package(HDF5 REQUIRED COMPONENTS C CXX)
+
 # Check if OpenCV is found
 if(OpenCV_FOUND)
   message(STATUS "OpenCV found at ${OpenCV_DIR}")
@@ -61,7 +64,8 @@ add_compile_definitions("DEBUG=$<CONFIG:Debug>")
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${ERROR_DATA_TYPE_FILES}
                                ${PARSER_FILES})
 
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${HDF5_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${HDF5_LIBRARIES})
 
 # target_link_options(${PROJECT_NAME} BEFORE PUBLIC -fsanitize=undefined PUBLIC
 # -fsanitize=address) Set the output directory for the binary to a 'bin' folder
